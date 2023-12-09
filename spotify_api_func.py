@@ -7,74 +7,12 @@ TOKEN = getToken()
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 COLUMNS = ["track_id","track_name","track_uri","duration","artist_id","artist_name","album_id","album_name","album_type","album_released","album_total_tracks"]
 
-# ignore_artist_id = [
-#     '4NJhFmfw43RLBLjQvxDuRS',
-#     '5wTAi7QkpP6kp8a54lmTOq',
-#     '2jCGEMSZXMSOImpD8sqo56',
-#     '1JOQXgYdQV2yfrhewqx96o',
-#     '7yxeJll1absl3LxWoIrBj5',
-#     '4b83P4cnmD7hqhoUkgGEsN',
-#     '2D7RkvtKKb6E5UmbjQM1Jd',
-#     '0OzxPXyowUEQ532c9AmHUR',
-#     '6AphpMkKDU4I3Z6XaGu1UV',
-#     '1AoIc5YFH0aSFc4mKqBEeB',
-#     '6aItH4tJHWc4wKwlDXkJrc',
-#     '7f5wJNknfAbvVtXW5zou4h',
-#     '1M9AXZkNPdOd1IPEsQsXnT',
-#     '1C1x4MVkql8AiABuTw6DgE',
-#     '1p6wR69pnH9LBWZvwliuz2',
-#     '2wOqMjp9TyABvtHdOSOTUS',
-#     '5OZAfzSUnJzQ5PrW4ZYCc8',
-#     '003f4bk13c6Q3gAUXv7dGJ',
-#     '6MF58APd3YV72Ln2eVg710',
-#     '7y3p4KDHrEBAbtzlRva6MQ',
-#     '5ihY290YPGc3aY2xTyx7Gy',
-#     '0WoblGS63EJxXsaCCUClJf',
-#     '2TvPBulHtfwAkQUDyc7JQW',
-#     '0hKq3u04JU5IuGNSTGyngJ',
-#     '0MvSBMGRQJY3mRwIbJsqF1',
-#     '5Xzm3ggNexDSCMhS7ndmfY',
-#     '4TFCOk1S65SgCVHL5mrsQn',
-#     '60vF1fLR6yzLxCQUlnAYYj',
-#     '6wWzrvB5m2BSseIfpeWtJX',
-#     '6n7nd5iceYpXVwcx8VPpxF',
-#     '2UqjDAXnDxejEyE0CzfUrZ',
-#     '6pAwHPeExeUbMd5w7Iny6D',
-#     '656RXuyw7CE0dtjdPgjJV6',
-#     '436sYg6CZhNefQJogaXeK0',
-#     '3MKCzCnpzw3TjUYs2v7vDA',
-#     '3Z5fRknMBBNfCw6pkgR9S8',
-#     '2vedxcgUX1uom0dCE4xTTj',
-#     '4QHgItlRsXcYDTm3eJoFDP',
-#     '088fpww3Ae4U9cMZv5O6m8',
-#     '00iJnnUu476m1HX16e3por',
-#     '4nDr7qTaOJhc1xvZQOKdEE',
-#     '3OsRAKCvk37zwYcnzRf5XF',
-#     '7nxdGB1ERSodMHz0rYUXkQ',
-#     '1dW38AxhFH7xZjV7o3p3l4',
-#     '4UT0p3ljEiD472lZp44KLH',
-#     '2p0UyoPfYfI76PCStuXfOP',
-#     '04kScQiBaLpLuCR1rh20Dd',
-#     '05pJB6sDGej7vpC9V6bjV8',
-#     '0dicUFoK5LIbqu6OoHu8VH',
-#     '4OEwK9zvDEcRKWnW4dYjv0',
-#     '3Qh7r2c4JWTmRLH3swU9dC',
-#     '6ljM6B2XmSU7BtG3tZLQ1K',
-#     '0w3j8zzxS0X4w2P0I4NOYi',
-#     '6LRsmB0vKbCv8KoSgWXbVX',
-#     '2CCcoAwiAwpIs1hcsqkk3b',
-    
-# ]
-
-
 def songsPerArtist(df):
     artist_song_count = df.groupby(['artist_id', 'artist_name'])['track_id'].count().reset_index()
     artist_song_count.columns = ['artist_id', 'artist_name', 'song_count']
 
     # Save the artist_song_count DataFrame to a CSV file
     artist_song_count.to_csv('artist_song_count.csv', index=False)
-
-
 
 def addToPlaylist(playlist_id,track_uris):
     # Ensure track_ids is always a list
@@ -181,8 +119,9 @@ def getUniqueArtistIDsFromPlaylist(playlist_id):
         if response.status_code == 200:
             playlist_tracks = response.json()
             for item in playlist_tracks["items"]:
-                for artist in item["track"]["artists"]:
-                    artist_ids.add(artist["id"])
+                if item["track"] != None:
+                    for artist in item["track"]["artists"]:
+                        artist_ids.add(artist["id"])
             url = playlist_tracks["next"]
         else:
             print(f"FAILed {response.status_code}")
@@ -334,7 +273,13 @@ try:
         artists = pickle.load(fp)
 except:
     artists = set()
+
 print("Total Artists: ",len(artists))
+
+# with open("artistIDsOld", "rb") as fp:   # Unpickling
+#     artistsOLD = pickle.load(fp)
+
+# afterartists = list(set(artistsOLD).union(set(artists)))
 
 # artists_new = list()
 # artists_new = list(set(artists_new).union(set(getUniqueArtistIDsFromPlaylist('6U2Y6FsgIqvI6B0BxAIIgl')))) #newartists
@@ -344,9 +289,10 @@ print("Total Artists: ",len(artists))
 # artists_new = list(set(artists_new).union(set(getUniqueArtistIDsFromPlaylist('37i9dQZF1DX9IALXsyt8zk')))) #RADAR korea
 # artists_new = list(set(artists_new).union(set(getUniqueArtistIDsFromPlaylist('37i9dQZF1DX7vZYLzFGQXc')))) #Fresh Finds Korea
 # new_artist_ids = [artist_id for artist_id in artists_new if artist_id not in artists]
+# new_artist_ids_TEMP = [artist_id for artist_id in artists_new if artist_id not in afterartists]
 # start_time = time.time()
 # newArtistsDF = pd.DataFrame(columns=COLUMNS)
-# for artist in tqdm(new_artist_ids):
+# for artist in tqdm(new_artist_ids_TEMP):
 #     if time.time()-start_time > 3400:
 #         start_time = time.time()
 #         TOKEN = getToken()
@@ -361,42 +307,40 @@ print("Total Artists: ",len(artists))
 #     newArtistsDF = pd.concat([newArtistsDF,cleaned_new_df],ignore_index=True)
 #     newArtistsDF = lookForDup(newArtistsDF.copy())
 # newArtistsSongDF = newArtistsDF.sort_values(ignore_index=True,by=['artist_name','album_released','album_name']) 
-# newArtistsSongDF = newArtistsSongDF.query('album_released <= "2023-06-31"')
+# newArtistsSongDF = newArtistsSongDF.query('album_released <= "2023-10-31"')
 
-# newArtistsSongDF.to_csv('new-artists-august.csv',index=False)
+# newArtistsSongDF.to_csv('new-artists-november.csv',index=False)
 
-# # Add songs to playlist # # #
+# # # Add songs to playlist # # #
 # uris = newArtistsSongDF['track_uri'].to_list()
-# playlist_id = '2HnmmtRoElXWTqu4J9C3ZZ'
+# playlist_id = '0VVhUykZURl33RbIL9paGa'
 # addToPlaylist(playlist_id,uris)
 
 # artists = list(set(artists).union(set(new_artist_ids)))
-print("New Total Artists: ",len(artists))
-with open("artistIDs", "wb") as fp:   #Pickling
-    pickle.dump(artists, fp)
+# print("New Total Artists: ",len(artists))
+# with open("artistIDs", "wb") as fp:   #Pickling
+#     pickle.dump(artists, fp)
 
 
-# try:
-#     with open("blockedArtistIDs", "rb") as fp:   # Unpickling
-#         ignore_artist_id = pickle.load(fp)
-# except:
-#     ignore_artist_id = set()
-# print("Total Blocked Artists: ",len(ignore_artist_id))
+try:
+    with open("blockedArtistIDs", "rb") as fp:   # Unpickling
+        ignore_artist_id = pickle.load(fp)
+except:
+    ignore_artist_id = set()
+print("Total Blocked Artists: ",len(ignore_artist_id))
 
 # blocked_artists = list(set(ignore_artist_id).union(set(getUniqueArtistIDsFromPlaylist('2bjuJFpJJUZoZ5vVyX3Bnj'))))
 # with open("blockedArtistIDs", 'wb') as fp:
 #     pickle.dump(blocked_artists, fp)
-
 
 if os.path.exists('allSongs.parquet'):
     finalDF = pd.read_parquet('allSongs.parquet')
 else:
     finalDF = pd.DataFrame(columns=COLUMNS)
 
-
-# # Get songs of artists and remove dup
+# # # Get songs of artists and remove dup
 # start_time = time.time()
-# for artist in tqdm(artists[:3000]):
+# for artist in tqdm(artists[7050:]):
 #     if artist not in ignore_artist_id:
 #         if time.time()-start_time > 3400:
 #             start_time = time.time()
@@ -405,30 +349,30 @@ else:
 #         new_df = getAllTracksFromArtistID(artist)
 #         cleaned_new_df = lookForDup(new_df.copy())
 #         # remove rows using boolean mask
-#         mask = (cleaned_new_df['track_id'].isin(finalDF['track_id'])) | ((cleaned_new_df['track_name'].isin(finalDF['track_name'])) &
-#                 (cleaned_new_df['artist_id'].isin(finalDF['artist_id'])) &
-#                 (abs(cleaned_new_df['duration'] - finalDF['duration']) <= 2000))
+#         mask = (cleaned_new_df['track_id'].isin(finalDF['track_id'])) 
+#         # | ((cleaned_new_df['track_name'].isin(finalDF['track_name'])) &
+#         #         (cleaned_new_df['artist_id'].isin(finalDF['artist_id'])) &
+#         #         (abs(cleaned_new_df['duration'] - finalDF['duration']) <= 2000))
 #         cleaned_new_df = cleaned_new_df[~mask]
 #         finalDF = pd.concat([finalDF,cleaned_new_df],ignore_index=True)
 #         finalDF = lookForDup(finalDF.copy())
     
-
 # Save to csv/parquet
 finalDF.to_parquet('allSongs.parquet', index=False)
 finalDF.to_csv('allSongs.csv',index=False)
 
-# newsongdf = finalDF.query('album_released >= "2023-08-01" & album_released <= "2023-08-31"')
-# newsongdf = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
-# # newsongdf = getInstrumental(newsongdf)
-# newsongdf = newsongdf.sort_values(ignore_index=True,by=['album_released','album_name']) 
-# newsongdf.to_csv('testallthing-aug23.csv',index=False)
-# # finalDF.to_parquet('testallthing.parquet', index=False)
+newsongdf = finalDF.query('album_released >= "2023-11-01" & album_released <= "2023-11-30"')
+newsongdf = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
+# newsongdf = getInstrumental(newsongdf)
+newsongdf = newsongdf.sort_values(ignore_index=True,by=['album_released','album_name']) 
+newsongdf.to_csv('playlist-nov23.csv',index=False)
+# finalDF.to_parquet('testallthing.parquet', index=False)
 
 # # # Add songs to playlist # # #
-# filtered_df = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
-# uris = filtered_df['track_uri'].to_list()
-# playlist_id = '0TVujiFTaMcSxFJMxMSVgy'
-# addToPlaylist(playlist_id,uris)
+filtered_df = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
+uris = filtered_df['track_uri'].to_list()
+playlist_id = '5NLNj4NXOUKUHGioY0QLbM'
+addToPlaylist(playlist_id,uris)
 # # # # # # # # # # # # # # # #
 
 # # # Update sorted main  # # # #
