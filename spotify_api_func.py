@@ -43,7 +43,7 @@ def empty_spotify_playlist(playlist_id):
     # Step 4: Remove the tracks (in chunks of 100)
     chunked_uris = [track_uris[i:i+100] for i in range(0, len(track_uris), 100)]
     
-    for chunk in chunked_uris:
+    for chunk in tqdm(chunked_uris):
         response = requests.delete(
             f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks",
             headers=HEADERS,
@@ -76,7 +76,6 @@ def getLikedSongs():
     tracks = []
     progress_bar = tqdm(total=float('inf'), unit='iteration', ncols=80)
     while url:
-        
         response = requests.get(url, headers=HEADERS)
         while response.status_code == 429:
             time.sleep(10)
@@ -267,15 +266,15 @@ def getInstrumental(df):
 
 ## MAIN CODE #### MAIN CODE #### MAIN CODE #### MAIN CODE #### MAIN CODE #### MAIN CODE #### MAIN CODE ##
 
-
 try:
     with open("artistIDs", "rb") as fp:   # Unpickling
         artists = pickle.load(fp)
 except:
     artists = set()
 
-print("Total Artists: ",len(artists))
+print("Total Artists: ", len(artists))
 
+#### UPDATE ARTISTS LIST #### 
 # with open("artistIDsOld", "rb") as fp:   # Unpickling
 #     artistsOLD = pickle.load(fp)
 
@@ -307,19 +306,24 @@ print("Total Artists: ",len(artists))
 #     newArtistsDF = pd.concat([newArtistsDF,cleaned_new_df],ignore_index=True)
 #     newArtistsDF = lookForDup(newArtistsDF.copy())
 # newArtistsSongDF = newArtistsDF.sort_values(ignore_index=True,by=['artist_name','album_released','album_name']) 
-# newArtistsSongDF = newArtistsSongDF.query('album_released <= "2023-10-31"')
+# newArtistsSongDF = newArtistsSongDF.query('album_released <= "2024-05-31"')
 
-# newArtistsSongDF.to_csv('new-artists-november.csv',index=False)
+# newArtistsSongDF.to_csv('new-artists-june.csv',index=False)
 
-# # # Add songs to playlist # # #
+# # # # Add songs to playlist # # #
 # uris = newArtistsSongDF['track_uri'].to_list()
-# playlist_id = '0VVhUykZURl33RbIL9paGa'
-# addToPlaylist(playlist_id,uris)
+# uris1 = uris
+# playlist_id = '4NNtBluTROGuwvWHfkWOGP'
+# addToPlaylist(playlist_id,uris1)
+# # playlist_id = '2vRym858yQ86YXlGGdyjuq'
+# # addToPlaylist(playlist_id,uris2)
 
 # artists = list(set(artists).union(set(new_artist_ids)))
 # print("New Total Artists: ",len(artists))
 # with open("artistIDs", "wb") as fp:   #Pickling
 #     pickle.dump(artists, fp)
+
+#### UPDATE ARTIST LIST END ####
 
 
 try:
@@ -329,18 +333,27 @@ except:
     ignore_artist_id = set()
 print("Total Blocked Artists: ",len(ignore_artist_id))
 
+#### UPDATE BLOCKED ARTISTS ####
+
 # blocked_artists = list(set(ignore_artist_id).union(set(getUniqueArtistIDsFromPlaylist('2bjuJFpJJUZoZ5vVyX3Bnj'))))
 # with open("blockedArtistIDs", 'wb') as fp:
 #     pickle.dump(blocked_artists, fp)
+
+#### UPDATE BLOCKED ARTISTS END ####
 
 if os.path.exists('allSongs.parquet'):
     finalDF = pd.read_parquet('allSongs.parquet')
 else:
     finalDF = pd.DataFrame(columns=COLUMNS)
 
-# # # Get songs of artists and remove dup
-# start_time = time.time()
-# for artist in tqdm(artists[7050:]):
+# # # # # with open("artistIDs", "wb") as fp:   #Pickling
+# # # # #     pickle.dump(artists, fp)
+
+#### FETCH NEW SONGS FROM ALL ARTISTS ####
+
+start_time = time.time()
+#3250-4250 check
+# for artist in tqdm(artists[8250:]):
 #     if artist not in ignore_artist_id:
 #         if time.time()-start_time > 3400:
 #             start_time = time.time()
@@ -361,21 +374,23 @@ else:
 finalDF.to_parquet('allSongs.parquet', index=False)
 finalDF.to_csv('allSongs.csv',index=False)
 
-newsongdf = finalDF.query('album_released >= "2023-11-01" & album_released <= "2023-11-30"')
+newsongdf = finalDF.query('album_released >= "2024-06-01" & album_released <= "2024-06-30"')
 newsongdf = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
 # newsongdf = getInstrumental(newsongdf)
 newsongdf = newsongdf.sort_values(ignore_index=True,by=['album_released','album_name']) 
-newsongdf.to_csv('playlist-nov23.csv',index=False)
+newsongdf.to_csv('playlist-jun24.csv',index=False)
 # finalDF.to_parquet('testallthing.parquet', index=False)
 
-# # # Add songs to playlist # # #
-filtered_df = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
-uris = filtered_df['track_uri'].to_list()
-playlist_id = '5NLNj4NXOUKUHGioY0QLbM'
-addToPlaylist(playlist_id,uris)
-# # # # # # # # # # # # # # # #
+#### FETCH NEW SONGS FROM ALL ARTISTS END ####
 
-# # # Update sorted main  # # # #
+#### ADD NEW SONGS TO PLAYLIST ####
+# filtered_df = newsongdf[~newsongdf['artist_id'].isin(ignore_artist_id)]
+# uris = filtered_df['track_uri'].to_list()
+# playlist_id = '3GEZoE8s8RABmaYhaO9PZW'
+# addToPlaylist(playlist_id,uris)
+#### ADD NEW SONGS TO PLAYLIST END ####
+
+# # UPDATE SORTED MAINS  # # # #
 # playlists=['5GUd2rXEDL8aD1je39qvLq','6EqTok1VDmMlzVqX4EmZSn','5Z2O70mVEoJzKhyCdKQmHO']
 # print('emptying playlists')
 # for playlist_id in playlists:
@@ -394,8 +409,10 @@ addToPlaylist(playlist_id,uris)
 # for chunk in chunks:
 #     addToPlaylist(playlists[counter],chunk)
 #     counter+=1
-# # # # # # # # # # # # # # # # #
+#### UPDATE SORTED MAINS END ####
 
 
-# inst live lofi acapella accapella remix 伴奏 mix MR orchestra acoustic unplugged sleep 'ao/en vivo' piano sped slowed reverb reimagined arranged arrangment medieval radio
+# inst live lofi acapella accapella remix mix 伴奏 MR orchestra 
+# acoustic unplugged sleep 'ao/en vivo' piano sped slowed 
+# reverb reimagined arranged arrangment medieval radio
 
